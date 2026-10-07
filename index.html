@@ -80,7 +80,7 @@ function days(){const a=[];let d=new Date(S.start+'T00:00');while(a.length<S.n){
 function pos(ts,ds){for(let i=0;i<ds.length;i++){const a=new Date(ds[i]).setHours(H0,0,0,0)/1e3,b=new Date(ds[i]).setHours(H1,0,0,0)/1e3;if(ts<=a)return i*HD;if(ts<=b)return i*HD+(ts-a)/3600}return ds.length*HD}
 
 async function load(){
-  const [r,m,c,u]=await Promise.all(['Reservation','Machines','Cellules','Utilisateurs'].map(n=>grist.docApi.fetchTable(n)));
+  const [r,m,c,u]=await Promise.all(['Reservations','Machines','Cellules','Utilisateurs'].map(n=>grist.docApi.fetchTable(n)));
   D.r=rows(r).filter(x=>x.Debut&&x.Fin);D.m=rows(m).filter(x=>x.Actif);D.c=rows(c);
   D.u=Object.fromEntries(rows(u).map(x=>[x.id,x.nom]));
   render();
@@ -125,7 +125,7 @@ function detail(e){
   const add=(k,v)=>{if(!v)return;const p=el('p');p.style.margin='4px 0';p.append(el('b','',k+' : '),document.createTextNode(v));c.append(p)};
   add('Type',e.Type);add('Machines',L(e.Machines).map(mname).join(', '));add('Début',fmt(e.Debut));add('Fin',fmt(e.Fin));
   add('Utilisateur',D.u[e.Utilisateur]);add('Motif',e.Motif);add('Statut',e.Statut);add('Message',e.Message);
-  $('dl').onclick=async()=>{try{await grist.docApi.applyUserActions([['RemoveRecord','Reservation',e.id]]);$('dt').close();load()}catch(x){alert('Suppression refusée : '+x.message)}};
+  $('dl').onclick=async()=>{try{await grist.docApi.applyUserActions([['RemoveRecord','Reservations',e.id]]);$('dt').close();load()}catch(x){alert('Suppression refusée : '+x.message)}};
   $('dt').showModal();
 }
 
@@ -145,7 +145,7 @@ async function send(){
   if(f.ce.value)rec.Cellule=+f.ce.value;
   if(f.am.value)rec.Mode_Autonox=f.am.value;
   try{
-    const r=await grist.docApi.applyUserActions([['AddRecord','Reservation',null,rec]]);
+    const r=await grist.docApi.applyUserActions([['AddRecord','Reservations',null,rec]]);
     await load();
     const n=D.r.find(x=>x.id===r.retValues[0]);
     const ok=n&&n.Statut==='confirmed';
@@ -165,5 +165,5 @@ $('pv').onclick=()=>shift(-1);$('nx').onclick=()=>shift(1);
 $('nw').onclick=()=>{initForm();$('fm').showModal()};
 $('fx').onclick=()=>$('fm').close();$('dx').onclick=()=>$('dt').close();
 $('sd').onclick=send;
-load();
+load().catch(e=>{const a=$('al');a.style.display='block';a.textContent='Erreur de chargement : '+(e&&e.message||e)});
 </script></body></html>
