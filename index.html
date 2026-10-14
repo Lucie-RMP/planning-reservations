@@ -1,169 +1,210 @@
 <!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8">
+<html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Planning machines</title>
+<title>Gantt</title>
 <script src="https://grist.numerique.gouv.fr/grist-plugin-api.js"></script>
 <style>
-:root{--bg:#f6f7f9;--pn:#fff;--tx:#1b2430;--mu:#6b7686;--ln:#dde1e7;--ac:#1f4e79;--ok:#15803d;--ko:#b91c1c}
-@media(prefers-color-scheme:dark){:root{--bg:#14181f;--pn:#1c222b;--tx:#e6e9ee;--mu:#98a2b3;--ln:#2d3541;--ac:#7cb2e6;--ok:#4ade80;--ko:#f87171}}
+:root{--bg:#f6f7f9;--pn:#fff;--tx:#1b2430;--mu:#6b7686;--ln:#e3e6eb;--ac:#1f4e79;--ok:#15803d;--ko:#b91c1c;--dk:rgba(120,130,150,.10);--td:rgba(31,78,121,.16);--navy:#102648;--rh:36px}
+@media(prefers-color-scheme:dark){:root{--bg:#14181f;--pn:#1c222b;--tx:#e6e9ee;--mu:#98a2b3;--ln:#2a313c;--ac:#7cb2e6;--ok:#4ade80;--ko:#f87171;--dk:rgba(255,255,255,.045);--td:rgba(124,178,230,.20);--navy:#8fb4ff}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.4 "Segoe UI",system-ui,sans-serif}
-header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;background:var(--pn);border-bottom:1px solid var(--ln)}
-header h1{font-size:15px;margin:0 auto 0 0}
-button,select,input{font:inherit;color:var(--tx);background:var(--pn);border:1px solid var(--ln);border-radius:4px;padding:4px 8px}
+body.tv{font-size:17px;--rh:54px}
+header{background:var(--pn);border-bottom:1px solid var(--ln);padding:8px 12px 0}
+.top{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+h1{font-size:22px;margin:0 auto 0 0;color:var(--ac);display:flex;align-items:center;gap:8px}
+.sub{display:flex;gap:4px;padding-left:34px;margin-top:2px}
+.sub button{border:0;border-bottom:3px solid transparent;border-radius:0;background:none;padding:6px 10px;color:var(--mu);font-weight:600}
+.sub button.on{color:var(--ac);border-color:var(--ac)}
+button,select,input{font:inherit;color:var(--tx);background:var(--pn);border:1px solid var(--ln);border-radius:6px;padding:5px 9px}
 button{cursor:pointer}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--ac)}
 button.p{background:var(--ac);color:var(--bg);border-color:var(--ac);font-weight:600}
 #al{margin:8px 12px 0;padding:8px 10px;border-left:4px solid #f59e0b;background:var(--pn);display:none}
-#wrap{overflow-x:auto;margin:10px 12px;border:1px solid var(--ln);background:var(--pn)}
-.row{display:flex;border-bottom:1px solid var(--ln);min-height:36px}
-.lab{position:sticky;left:0;z-index:3;flex:0 0 190px;background:var(--pn);padding:6px 8px;border-right:1px solid var(--ln);display:flex;align-items:center;gap:6px}
-.lab small{color:var(--mu);margin-left:auto}
+#wrap{overflow-x:auto;margin:10px 12px;border:1px solid var(--ln);background:var(--pn);border-radius:6px}
+#g{position:relative}
+.row{display:flex;border-bottom:1px solid var(--ln);min-height:var(--rh)}
+.lab{position:sticky;left:0;z-index:4;flex:0 0 200px;background:var(--pn);padding:6px 8px;border-right:2px solid var(--mu);display:flex;align-items:center;gap:6px;font-weight:600}
+.lab small{color:var(--mu);margin-left:auto;font-weight:400}
 .dot{width:9px;height:9px;border-radius:50%;flex:none}.dot.f{background:var(--ok)}.dot.b{background:var(--ko)}
-.trk{position:relative;flex:none;background-image:repeating-linear-gradient(90deg,var(--ln) 0 1px,transparent 1px 26px)}
-.hd .trk{height:30px}.day{position:absolute;top:0;height:100%;padding:6px;border-left:2px solid var(--mu);font-weight:600}
-.bar{position:absolute;top:4px;height:22px;border-radius:3px;color:#fff;padding:2px 6px;font-size:12px;white-space:nowrap;overflow:hidden;cursor:pointer;background:#64748b}
+.sw{width:6px;height:20px;border-radius:2px;flex:none}
+.trk{position:relative;flex:none;background-image:repeating-linear-gradient(90deg,var(--ln) 0 1px,transparent 1px var(--hw)),repeating-linear-gradient(90deg,var(--dk) 0 var(--dw),transparent var(--dw) calc(2*var(--dw)))}
+.hd .trk{height:58px;background-image:none}
+.wkh{position:absolute;top:0;height:26px;padding:4px 8px;font-weight:700;color:var(--ac);background:var(--dk);border-left:3px solid var(--ac);white-space:nowrap;overflow:hidden}
+.dayh{position:absolute;top:26px;height:32px;padding:6px 8px;font-weight:600;border-left:1px solid var(--mu)}
+.sep{position:absolute;top:0;bottom:0;width:1px;background:var(--mu);opacity:.55;z-index:1}.sep.w{width:3px;background:var(--ac);opacity:.9}
+.tdy{position:absolute;top:0;bottom:0;background:var(--td)}
+.bar{position:absolute;top:4px;height:calc(var(--rh) - 14px);border-radius:4px;color:#fff;padding:1px 6px;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;cursor:pointer;background:#64748b;border:1px solid rgba(0,0,0,.35);z-index:2}
+body.tv .bar{font-size:15px}
+.bar span{display:block;overflow:hidden;text-overflow:ellipsis}
 .bar.ghost{opacity:.4}
-.bar.rej{top:27px;height:7px;padding:0;background:repeating-linear-gradient(45deg,var(--ko) 0 4px,transparent 4px 8px)!important;border:1px solid var(--ko)}
-.bar.maintenance{background:#d97706!important}.bar.demo{background:#7c3aed!important}
+.bar.rej{top:calc(var(--rh) - 9px);height:7px;padding:0;background:repeating-linear-gradient(45deg,var(--ko) 0 4px,transparent 4px 8px)!important;border:1px solid var(--ko)}
+.bar.maintenance{background:repeating-linear-gradient(-45deg,#facc15 0 9px,#111 9px 18px)!important;color:#111}.bar.maintenance span{background:#facc15;padding:0 4px;border-radius:2px;display:inline-block}
+.bar.demo{background:var(--pn)!important;color:var(--navy);border:2px solid var(--navy);border-left:8px solid var(--navy)}
 .bar.out_of_service{background:repeating-linear-gradient(45deg,#7f1d1d 0 6px,#b91c1c 6px 12px)!important}
-.now{position:absolute;top:0;bottom:0;width:2px;background:var(--ko);z-index:2}
+.now{position:absolute;top:0;bottom:0;width:2px;background:var(--ko);z-index:3}
 .lg{margin:0 12px;color:var(--mu);display:flex;gap:14px;flex-wrap:wrap}
-.lg i{display:inline-block;width:12px;height:10px;border-radius:2px;margin-right:4px}
-dialog{background:var(--pn);color:var(--tx);border:1px solid var(--ln);border-radius:6px;max-width:460px;width:92%}
-dialog::backdrop{background:#0006}
+.lg i{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:4px;border:1px solid rgba(0,0,0,.3)}
+.vp{display:contents}.vb{display:block}
+body[data-v=c] .vp,body[data-v=c] .vb{display:none}body:not([data-v=c]) #cv{display:none}
+#cv{padding:12px}#cv img{max-width:100%;border:1px solid var(--ln);border-radius:6px;background:#fff}#cv li{margin:6px 0;display:flex;gap:8px;align-items:center}
+dialog{background:var(--pn);color:var(--tx);border:1px solid var(--ln);border-radius:8px;max-width:460px;width:92%}
+dialog::backdrop{background:#0007}
 label{display:block;margin:8px 0 2px;color:var(--mu)}
 .g2{display:flex;gap:6px}.g2>*{flex:1}
 .mcs{display:flex;flex-wrap:wrap;gap:4px 12px}.mcs label{margin:0;color:var(--tx)}
-#res{margin-top:10px;font-weight:600}
-.ok{color:var(--ok)}.ko{color:var(--ko)}
+#rm{font-size:15px;margin:8px 0}.ok{color:var(--ok)}.ko{color:var(--ko)}
 </style></head><body>
 <header>
-  <h1>Planning des machines</h1>
-  <button id="pv" title="Semaine précédente">◀</button>
-  <input type="date" id="st" aria-label="Date de début">
-  <button id="nx" title="Semaine suivante">▶</button>
-  <select id="nd" aria-label="Durée affichée"><option value="5">1 semaine</option><option value="10" selected>2 semaines</option><option value="20">4 semaines</option></select>
-  <label style="margin:0"><input type="checkbox" id="rj" checked> Voir les refus</label>
-  <button class="p" id="nw">Réserver</button>
+ <div class="top">
+  <h1><svg width="26" height="22" viewBox="0 0 26 22" aria-hidden="true"><rect x="0" y="2" width="16" height="4" rx="2" fill="currentColor"/><rect x="6" y="9" width="18" height="4" rx="2" fill="currentColor"/><rect x="3" y="16" width="12" height="4" rx="2" fill="currentColor"/></svg>Gantt</h1>
+  <span class="vp">
+   <button id="pv" title="Previous week">◀</button><input type="date" id="st" aria-label="Start date"><button id="nx" title="Next week">▶</button>
+   <button id="td">Today</button>
+   <select id="fm" aria-label="Filter by machine"></select><select id="fu" aria-label="Filter by user"></select>
+   <button id="dp">⚙ Display ▾</button>
+   <button class="p" id="nw">＋ Book</button>
+  </span>
+ </div>
+ <nav class="sub"><button id="tb1" class="on">🤖 Machines</button><button id="tb2">🗺️ Cells</button></nav>
 </header>
-<div id="al"></div>
+<div class="vb"><div id="al"></div>
 <div id="wrap"><div id="g"></div></div>
-<div class="lg"><span><i style="background:#64748b"></i>Réservation (couleur de la machine)</span><span><i style="background:#d97706"></i>Maintenance</span><span><i style="background:#7c3aed"></i>Démo</span><span><i style="background:#b91c1c"></i>Hors service</span><span><i style="background:#64748b;opacity:.4"></i>Machine bloquée par la réservation</span><span>Trait rayé rouge : demande refusée</span></div>
+<div class="lg"><span><i style="background:#ffc000"></i>Booking (colour of its cell)</span><span><i style="background:repeating-linear-gradient(-45deg,#facc15 0 3px,#111 3px 6px)"></i>Maintenance</span><span><i style="background:var(--pn);border:2px solid var(--navy)"></i>Demo</span><span><i style="background:#b91c1c"></i>Out of service</span><span><i style="background:#64748b;opacity:.4"></i>Machine blocked by a booking</span><span>Red hatched line: refused request</span></div></div>
+<section id="cv"><div id="cvc"></div></section>
 
-<dialog id="dt"><div id="dtc"></div><div class="g2" style="margin-top:12px"><button id="dl">Supprimer</button><button id="dx">Fermer</button></div></dialog>
-
-<dialog id="fm"><form id="f" method="dialog">
-  <b>Nouvelle réservation</b>
-  <label>Type</label><select name="ty"><option>reservation</option><option>maintenance</option><option>out of service</option><option>demo</option></select>
+<dialog id="dt"><div id="dtc"></div><div class="g2" style="margin-top:12px"><button id="dl">Delete</button><button id="dx">Close</button></div></dialog>
+<dialog id="ds"><b>Display</b>
+ <label>Period shown</label><select id="nd"><option value="5">1 week</option><option value="10" selected>2 weeks</option><option value="20">4 weeks</option></select>
+ <label><input type="checkbox" id="rj" checked> Show refused requests</label>
+ <label><input type="checkbox" id="tv"> Large text (wall display)</label>
+ <div style="margin-top:12px"><button id="dsx" class="p">Close</button></div></dialog>
+<dialog id="rs"><b id="rt"></b><div id="rm"></div><button id="rx" class="p">Close</button></dialog>
+<dialog id="fm2"><form id="f" method="dialog">
+  <b>New booking</b>
+  <label>Type</label><select name="ty"><option value="reservation">Booking</option><option value="maintenance">Maintenance</option><option value="out of service">Out of service</option><option value="demo">Demo</option></select>
   <label>Machines</label><div class="mcs" id="mcs"></div>
-  <label>Cellule</label><select name="ce"></select>
-  <div class="g2"><div><label>Début</label><input type="date" name="d1" required></div><div><label>Heure</label><select name="h1"></select></div></div>
-  <div class="g2"><div><label>Fin</label><input type="date" name="d2" required></div><div><label>Heure</label><select name="h2"></select></div></div>
-  <label>Mode Autonox (si rail utilisé)</label><select name="am"><option value="">—</option><option>full</option><option>half</option></select>
-  <label>Motif</label><input name="mo" maxlength="200" style="width:100%">
-  <div class="g2" style="margin-top:12px"><button class="p" type="button" id="sd">Envoyer</button><button type="button" id="fx">Annuler</button></div>
-  <div id="res" role="status"></div>
+  <label>Cell</label><select name="ce"></select>
+  <div class="g2"><div><label>Start</label><input type="date" name="d1" required></div><div><label>Hour</label><select name="h1"></select></div></div>
+  <div class="g2"><div><label>End</label><input type="date" name="d2" required></div><div><label>Hour</label><select name="h2"></select></div></div>
+  <label>Autonox mode (if rail used)</label><select name="am"><option value="">—</option><option>full</option><option>half</option></select>
+  <label>Reason</label><input name="mo" maxlength="200" style="width:100%">
+  <div class="g2" style="margin-top:12px"><button class="p" type="button" id="sd">Send</button><button type="button" id="fx">Cancel</button></div>
 </form></dialog>
 
 <script>
-const HW=26,H0=8,H1=19,HD=H1-H0;
-const S={start:'2026-10-01',n:10};
+let HW=26;const H0=8,H1=19,HD=H1-H0;
+const S={start:new Date().toLocaleDateString('sv-SE'),n:10,m:'',u:''};
 const D={r:[],m:[],c:[],u:{}};
 const $=id=>document.getElementById(id);
 const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
 const L=v=>Array.isArray(v)?(v[0]==='L'?v.slice(1):v):[];
 const rows=t=>{const k=Object.keys(t);return t.id.map((id,i)=>{const o={};k.forEach(c=>o[c]=t[c][i]);return o})};
-const fmt=ts=>new Date(ts*1000).toLocaleString('fr-FR',{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+const fmt=ts=>new Date(ts*1000).toLocaleString('en-GB',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
 const mname=id=>(D.m.find(m=>m.id===id)||{}).nom||('#'+id);
+const TR=[[/Dates de début et de fin obligatoires\./,'Start and end dates are required.'],[/Choisissez au moins une machine\./,'Select at least one machine.'],[/La fin doit être après le début\./,'End must be after start.'],[/Réservation impossible le week-end\./,'Bookings are not possible on weekends.'],[/Les créneaux se réservent par heures pleines\./,'Slots are booked in whole hours.'],[/Créneaux possibles de 8h à 19h\./,'Bookable hours are 8:00 to 19:00.'],[/Choisissez la cellule d'utilisation\./,'Select the cell you will work in.'],[/(.+) est désactivée\./,'$1 is disabled.'],[/(.+) ne peut pas fonctionner dans (.+)/,'$1 cannot operate in $2'],[/Machine hors service : /,'Machine out of service: '],[/Maintenance en cours : /,'Maintenance in progress: '],[/Démonstration prévue : /,'Demo scheduled: '],[/Créneau déjà réservé par /,'Slot already booked by '],[/non précisé/,'not specified']];
+const tr=m=>TR.reduce((s,[a,b])=>s.replace(a,b),m||'');
+const wk=d=>{const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())),n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);return Math.ceil(((t-Date.UTC(t.getUTCFullYear(),0,1))/864e5+1)/7)};
+const lum=h=>{const m=/^#?([0-9a-f]{6})$/i.exec(h||'');if(!m)return 0;const n=parseInt(m[1],16);return(.299*(n>>16)+.587*((n>>8)&255)+.114*(n&255))/255};
 
 function days(){const a=[];let d=new Date(S.start+'T00:00');while(a.length<S.n){if(d.getDay()%6)a.push(new Date(d));d.setDate(d.getDate()+1)}return a}
 function pos(ts,ds){for(let i=0;i<ds.length;i++){const a=new Date(ds[i]).setHours(H0,0,0,0)/1e3,b=new Date(ds[i]).setHours(H1,0,0,0)/1e3;if(ts<=a)return i*HD;if(ts<=b)return i*HD+(ts-a)/3600}return ds.length*HD}
+const cellOf=e=>D.c.find(c=>c.id===e.Cellule);
 
 async function load(){
   const [r,m,c,u]=await Promise.all(['Reservations','Machines','Cellules','Utilisateurs'].map(n=>grist.docApi.fetchTable(n)));
   D.r=rows(r).filter(x=>x.Debut&&x.Fin);D.m=rows(m).filter(x=>x.Actif);D.c=rows(c);
-  D.u=Object.fromEntries(rows(u).map(x=>[x.id,x.nom]));
-  render();
+  D.u=Object.fromEntries(rows(u).map(x=>[x.id,x.nom]));fillF();
+  if(document.body.dataset.v==='c')renderCells();render();
 }
 
 function render(){
-  const ds=days(),W=ds.length*HD*HW,now=Date.now()/1e3,tot=ds.length*HD,rj=$('rj').checked;
-  const g=$('g');g.replaceChildren();g.style.width=(W+190)+'px';
-  const hd=el('div','row hd');hd.append(el('div','lab','Machine'));
-  const th=el('div','trk');th.style.width=W+'px';
-  ds.forEach((d,i)=>{const x=el('div','day',d.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'2-digit'}));x.style.left=i*HD*HW+'px';x.style.width=HD*HW+'px';th.append(x)});
+  const ds=days(),dw=HD*HW,W=ds.length*dw,now=Date.now()/1e3,tot=ds.length*HD,rj=$('rj').checked,today=new Date().toDateString();
+  const g=$('g');g.replaceChildren();g.style.width=(W+200)+'px';g.style.setProperty('--hw',HW+'px');g.style.setProperty('--dw',dw+'px');
+  const seps=t=>ds.forEach((d,i)=>{if(!i)return;const s=el('div','sep'+(d.getDay()===1||ds[i-1].getDay()>d.getDay()?' w':''));s.style.left=i*dw+'px';t.append(s)});
+  const hd=el('div','row hd');hd.append(el('div','lab','Machine'));const th=el('div','trk');th.style.width=W+'px';
+  let i0=0;ds.forEach((d,i)=>{const nxt=ds[i+1];if(!nxt||wk(nxt)!==wk(d)){const w=el('div','wkh','Week '+wk(d)+' · '+ds[i0].toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' – '+d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}));w.style.left=i0*dw+'px';w.style.width=(i-i0+1)*dw+'px';th.append(w);i0=i+1}
+    const x=el('div','dayh',d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}));x.style.left=i*dw+'px';x.style.width=dw+'px';if(d.toDateString()===today)x.style.fontWeight=800;th.append(x)});
   hd.append(th);g.append(hd);
-  D.m.forEach(m=>{
-    const row=el('div','row'),trk=el('div','trk');trk.style.width=W+'px';
-    let used=0;
+  const ti=ds.findIndex(d=>d.toDateString()===today);
+  D.m.filter(m=>!S.m||m.id==S.m).forEach(m=>{
+    const row=el('div','row'),trk=el('div','trk');trk.style.width=W+'px';let used=0;
+    if(ti>=0){const t=el('div','tdy');t.style.left=ti*dw+'px';t.style.width=dw+'px';trk.append(t)}
+    seps(trk);
     const busy=D.r.some(e=>e.Statut==='confirmed'&&e.Debut<=now&&e.Fin>now&&L(e.Occupe).includes(m.id));
     D.r.forEach(e=>{
       const own=L(e.Machines).includes(m.id),occ=L(e.Occupe).includes(m.id),rej=e.Statut!=='confirmed';
       if(rej?!(own&&rj):!occ)return;
+      if(S.u&&e.Type==='reservation'&&e.Utilisateur!=S.u)return;
       const s=pos(e.Debut,ds),f=pos(e.Fin,ds);if(f<=s)return;
       if(!rej&&e.Type==='reservation')used+=f-s;
-      const b=el('div','bar '+(e.Type||'').replace(/ /g,'_')+(rej?' rej':'')+(own?'':' ghost'),rej?'':(e.Type==='reservation'?(D.u[e.Utilisateur]||'?'):e.Type));
-      b.style.left=s*HW+'px';b.style.width=Math.max(4,(f-s)*HW)+'px';
-      if(e.Type==='reservation'&&!rej)b.style.background=m.Couleur||'#64748b';
-      b.title=fmt(e.Debut)+' → '+fmt(e.Fin)+(e.Message?'\n'+e.Message:'');
+      const nm=D.u[e.Utilisateur]||'?',w=(f-s)*HW,isR=e.Type==='reservation';
+      const b=el('div','bar '+(e.Type||'').replace(/ /g,'_')+(rej?' rej':'')+(own?'':' ghost'));
+      if(!rej)b.append(el('span','',isR?(w<70?nm.split(' ').map(x=>x[0]).join('').toUpperCase():nm):({maintenance:'Maintenance',demo:'Demo','out of service':'Out of service'}[e.Type]||e.Type)));
+      b.style.left=s*HW+'px';b.style.width=Math.max(4,w)+'px';
+      if(isR&&!rej){const c=(cellOf(e)||{}).Couleur||m.Couleur||'#64748b';b.style.background=c;b.style.color=lum(c)>.6?'#111':'#fff'}
+      b.title=fmt(e.Debut)+' → '+fmt(e.Fin)+(e.Message?'\n'+tr(e.Message):'');
       b.onclick=()=>detail(e);trk.append(b);
     });
-    const lab=el('div','lab');const dot=el('i','dot '+(busy?'b':'f'));dot.title=busy?'Occupée maintenant':'Libre maintenant';
-    lab.append(dot,el('span','',m.nom),el('small','',Math.round(100*used/tot)+' %'));lab.title='Taux d\'occupation sur la période affichée';
+    const lab=el('div','lab'),dot=el('i','dot '+(busy?'b':'f')),sw=el('i','sw');sw.style.background=m.Couleur||'#64748b';dot.title=busy?'Busy now':'Free now';
+    lab.append(sw,dot,el('span','',m.nom),el('small','',Math.round(100*used/tot)+' %'));lab.title='Occupancy over the period shown';
     row.append(lab,trk);g.append(row);
   });
   const nx=pos(now,ds);
-  if(now>new Date(ds[0]).setHours(H0,0,0,0)/1e3&&nx<tot){const l=el('div','now');l.style.left=(190+nx*HW)+'px';g.append(l);l.style.top='0';l.style.height='100%';l.style.position='absolute'}
-  g.style.position='relative';
+  if(ti>=0&&nx<tot){const l=el('div','now');l.style.left=(200+nx*HW)+'px';g.append(l)}
   const al=D.r.filter(e=>e.Alerte);
   $('al').style.display=al.length?'block':'none';
-  $('al').textContent=al.length?('⚠ '+al.map(e=>e.Type+' #'+e.id+' chevauche les réservations : '+e.Alerte).join(' | ')):'';
+  $('al').textContent=al.length?('⚠ '+al.map(e=>(e.Type)+' #'+e.id+' overlaps bookings: '+e.Alerte).join(' | ')):'';
 }
 
 function detail(e){
   const c=$('dtc');c.replaceChildren();
-  const add=(k,v)=>{if(!v)return;const p=el('p');p.style.margin='4px 0';p.append(el('b','',k+' : '),document.createTextNode(v));c.append(p)};
-  add('Type',e.Type);add('Machines',L(e.Machines).map(mname).join(', '));add('Début',fmt(e.Debut));add('Fin',fmt(e.Fin));
-  add('Utilisateur',D.u[e.Utilisateur]);add('Motif',e.Motif);add('Statut',e.Statut);add('Message',e.Message);
-  $('dl').onclick=async()=>{try{await grist.docApi.applyUserActions([['RemoveRecord','Reservations',e.id]]);$('dt').close();load()}catch(x){alert('Suppression refusée : '+x.message)}};
+  const add=(k,v)=>{if(!v)return;const p=el('p');p.style.margin='4px 0';p.append(el('b','',k+': '),document.createTextNode(v));c.append(p)};
+  add('Type',e.Type);add('Machines',L(e.Machines).map(mname).join(', '));add('Start',fmt(e.Debut));add('End',fmt(e.Fin));
+  add('User',D.u[e.Utilisateur]);add('Reason',e.Motif);add('Status',e.Statut);add('Message',tr(e.Message));
+  $('dl').onclick=async()=>{try{await grist.docApi.applyUserActions([['RemoveRecord','Reservations',e.id]]);$('dt').close();load()}catch(x){alert('Deletion refused: '+x.message)}};
   $('dt').showModal();
 }
 
+function renderCells(){const c=$('cvc');c.replaceChildren();
+  const im=document.createElement('img');im.src='cellules.png';im.alt='Plan of the platform cells';c.append(im,el('h3','','Machines per cell'));
+  const ul=el('ul');D.c.forEach(x=>{const li=el('li'),s=el('i','sw');s.style.background=x.Couleur||'#999';li.append(s,el('b','',x.nom),document.createTextNode('('+x.Type+'): '+L(x.machines).map(mname).join(', ')));ul.append(li)});
+  c.append(ul,el('p','','Cell A: half (half of the rail) or full (whole rail, blocks the Kuka). The AGV can go to any cell. Bookings are coloured like their cell.'))}
+function fillF(){const f=(id,a,lab)=>{const s=$(id),v=s.value;s.replaceChildren(new Option(lab,''),...a.map(x=>new Option(x[1],x[0])));s.value=v};f('fm',D.m.map(m=>[m.id,m.nom]),'All machines');f('fu',Object.entries(D.u),'All users')}
+function view(v){document.body.dataset.v=v;$('tb1').className=v==='c'?'':'on';$('tb2').className=v==='c'?'on':'';if(v==='c')renderCells()}
 function initForm(){
   const f=$('f');
-  $('mcs').replaceChildren(...D.m.map(m=>{const l=el('label');const i=document.createElement('input');i.type='checkbox';i.className='mc';i.value=m.id;l.append(i,' '+m.nom);return l}));
+  $('mcs').replaceChildren(...D.m.map(m=>{const l=el('label'),i=document.createElement('input');i.type='checkbox';i.className='mc';i.value=m.id;l.append(i,' '+m.nom);return l}));
   f.ce.replaceChildren(new Option('—',''),...D.c.map(c=>new Option(c.nom,c.id)));
-  f.h1.replaceChildren(...[...Array(11)].map((_,i)=>new Option(H0+i+'h',H0+i)));
-  f.h2.replaceChildren(...[...Array(11)].map((_,i)=>new Option(H0+1+i+'h',H0+1+i)));
-  f.h2.value=12;$('res').textContent='';
+  f.h1.replaceChildren(...[...Array(11)].map((_,i)=>new Option(H0+i+':00',H0+i)));
+  f.h2.replaceChildren(...[...Array(11)].map((_,i)=>new Option(H0+1+i+':00',H0+1+i)));f.h2.value=12;
 }
+function result(ok,msg){$('rt').textContent=ok?'✔ Booking confirmed':'✖ Booking refused';$('rt').className=ok?'ok':'ko';$('rm').textContent=msg;$('rs').showModal()}
 async function send(){
   const f=$('f'),ms=[...document.querySelectorAll('.mc:checked')].map(x=>+x.value);
-  if(!f.d1.value||!f.d2.value||!ms.length){$('res').className='ko';$('res').textContent='Choisissez au moins une machine et les dates.';return}
+  if(!f.d1.value||!f.d2.value||!ms.length){$('fm2').close();result(false,'Select at least one machine and the dates.');return}
   const t=(d,h)=>new Date(d+'T'+String(h).padStart(2,'0')+':00').getTime()/1e3;
   const rec={Machines:['L',...ms],Debut:t(f.d1.value,f.h1.value),Fin:t(f.d2.value,f.h2.value),Type:f.ty.value,Motif:f.mo.value};
-  if(f.ce.value)rec.Cellule=+f.ce.value;
-  if(f.am.value)rec.Mode_Autonox=f.am.value;
+  if(f.ce.value)rec.Cellule=+f.ce.value;if(f.am.value)rec.Mode_Autonox=f.am.value;
+  $('fm2').close();
   try{
     const r=await grist.docApi.applyUserActions([['AddRecord','Reservations',null,rec]]);
-    await load();
-    const n=D.r.find(x=>x.id===r.retValues[0]);
-    const ok=n&&n.Statut==='confirmed';
-    $('res').className=ok?'ok':'ko';
-    $('res').textContent=ok?'Réservation confirmée.':'Refusée : '+((n&&n.Message)||'vérifiez les champs.');
-  }catch(x){$('res').className='ko';$('res').textContent='Action refusée : '+x.message}
+    await load();const n=D.r.find(x=>x.id===r.retValues[0]),ok=n&&n.Statut==='confirmed';
+    result(ok,ok?'Your slot is booked.':(tr(n&&n.Message)||'Please check the fields.'));
+  }catch(x){result(false,'Action not allowed: '+x.message)}
 }
 
 grist.ready({requiredAccess:'full'});
 let tm;grist.onRecords(()=>{clearTimeout(tm);tm=setTimeout(load,250)});
 $('st').value=S.start;
 $('st').onchange=e=>{if(e.target.value){S.start=e.target.value;render()}};
-$('nd').onchange=e=>{S.n=+e.target.value;render()};
-$('rj').onchange=render;
+$('nd').onchange=e=>{S.n=+e.target.value;render()};$('rj').onchange=render;
+$('tv').onchange=e=>{HW=e.target.checked?40:26;document.body.classList.toggle('tv',e.target.checked);render()};
 const shift=k=>{const d=new Date(S.start+'T00:00');d.setDate(d.getDate()+7*k);S.start=d.toLocaleDateString('sv-SE');$('st').value=S.start;render()};
 $('pv').onclick=()=>shift(-1);$('nx').onclick=()=>shift(1);
-$('nw').onclick=()=>{initForm();$('fm').showModal()};
-$('fx').onclick=()=>$('fm').close();$('dx').onclick=()=>$('dt').close();
-$('sd').onclick=send;
-load().catch(e=>{const a=$('al');a.style.display='block';a.textContent='Erreur de chargement : '+(e&&e.message||e)});
+$('td').onclick=()=>{S.start=new Date().toLocaleDateString('sv-SE');$('st').value=S.start;render()};
+$('fm').onchange=e=>{S.m=e.target.value;render()};$('fu').onchange=e=>{S.u=e.target.value;render()};
+$('dp').onclick=()=>$('ds').showModal();$('dsx').onclick=()=>$('ds').close();
+$('nw').onclick=()=>{initForm();$('fm2').showModal()};$('fx').onclick=()=>$('fm2').close();
+$('dx').onclick=()=>$('dt').close();$('rx').onclick=()=>$('rs').close();$('sd').onclick=send;
+$('tb1').onclick=()=>view('p');$('tb2').onclick=()=>view('c');
+load().catch(e=>{const a=$('al');a.style.display='block';a.textContent='Loading error: '+(e&&e.message||e)});
 </script></body></html>
