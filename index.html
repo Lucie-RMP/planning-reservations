@@ -47,7 +47,7 @@ body.tv .bar{font-size:15px}
 .lg{margin:0 12px;color:var(--mu);display:flex;gap:14px;flex-wrap:wrap}
 .lg i{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:4px;border:1px solid rgba(0,0,0,.3)}
 .vp{display:contents}.vb{display:block}
-body[data-v=c] .vp,body[data-v=c] .vb{display:none}body:not([data-v=c]) #cv{display:none}
+body[data-v=c] .vp,body[data-v=c] .vb,body[data-v=h] .vp,body[data-v=h] .vb{display:none}body:not([data-v=c]) #cv,body:not([data-v=h]) #hv{display:none}#hv{padding:12px 16px;max-width:780px}#hv li{margin:5px 0}
 #cv{padding:12px}#cv img{max-width:100%;border:1px solid var(--ln);border-radius:6px;background:#fff}#cv li{margin:6px 0;display:flex;gap:8px;align-items:center}
 dialog{background:var(--pn);color:var(--tx);border:1px solid var(--ln);border-radius:8px;max-width:460px;width:92%}
 dialog::backdrop{background:#0007}
@@ -67,12 +67,13 @@ label{display:block;margin:8px 0 2px;color:var(--mu)}
    <button class="p" id="nw">＋ Book</button>
   </span>
  </div>
- <nav class="sub"><button id="tb1" class="on"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h10"/><path d="M8 21v-7l7-8"/><circle cx="8" cy="14" r="1.6"/><circle cx="15" cy="6" r="1.6"/><path d="M16.5 6.5l4 2"/></svg>Machines</button><button id="tb2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><path d="M3 12h7M14 12h7M12 3v6M12 13v8"/></svg>Cells</button></nav>
+ <nav class="sub"><button id="tb1" class="on"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h10"/><path d="M8 21v-7l7-8"/><circle cx="8" cy="14" r="1.6"/><circle cx="15" cy="6" r="1.6"/><path d="M16.5 6.5l4 2"/></svg>Machines</button><button id="tb2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><path d="M3 12h7M14 12h7M12 3v6M12 13v8"/></svg>Cells</button><button id="tb3"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.6 2.6 0 1 1 3.6 2.4c-.7.4-1.1.9-1.1 1.8M12 17h.01"/></svg>Help</button></nav>
 </header>
 <div class="vb"><div id="al"></div>
 <div id="wrap"><div id="g"></div></div>
-<div class="lg"><span><i style="background:#ffc000"></i>Booking (colour of its cell)</span><span><i style="background:repeating-linear-gradient(-45deg,#facc15 0 3px,#111 3px 6px)"></i>Maintenance</span><span><i style="background:var(--pn);border:2px solid var(--navy)"></i>Demo</span><span><i style="background:#b91c1c"></i>Out of service</span><span><i style="background:#64748b;opacity:.4"></i>Machine blocked by a booking</span><span>Red hatched line: refused request</span><span>Hours = start of each hour · shaded = afternoon (from 12:00)</span></div></div>
+<div class="lg"><span><i style="background:#ffc000"></i>Booking (colour of its cell)</span><span><i style="background:repeating-linear-gradient(-45deg,#facc15 0 3px,#111 3px 6px)"></i>Maintenance</span><span><i style="background:var(--pn);border:2px solid var(--navy)"></i>Demo</span><span><i style="background:#b91c1c"></i>Out of service</span><span><i style="background:#64748b;opacity:.4"></i>Machine blocked by a booking</span><span>Red hatched line: refused request</span><span>Hours = start of each hour · shaded = afternoon (from 13:00)</span></div></div>
 <section id="cv"><div id="cvc"></div></section>
+<section id="hv"><div id="hvc"></div></section>
 
 <dialog id="dt"><div id="dtc"></div><div class="g2" style="margin-top:12px"><button id="dl">Delete</button><button id="dx">Close</button></div></dialog>
 <dialog id="ds"><b>Display</b>
@@ -96,7 +97,8 @@ label{display:block;margin:8px 0 2px;color:var(--mu)}
 <script>
 let HW=26;const H0=8,H1=19,HD=H1-H0;
 const S={start:new Date().toLocaleDateString('sv-SE'),n:10,m:'',u:''};
-const D={r:[],m:[],c:[],u:{}};
+const D={r:[],m:[],c:[],u:{},t:{}};
+const tri=n=>{const p=(n||'').trim().split(/\s+/),ln=p.find(w=>w.length>1&&w===w.toUpperCase())||p[p.length-1]||'',fn=p.find(w=>w!==ln)||'';return((fn[0]||'')+ln.slice(0,2)).toUpperCase()};
 const $=id=>document.getElementById(id);
 const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
 const L=v=>Array.isArray(v)?(v[0]==='L'?v.slice(1):v):[];
@@ -115,17 +117,17 @@ const cellOf=e=>D.c.find(c=>c.id===e.Cellule);
 async function load(){
   const [r,m,c,u]=await Promise.all(['Reservations','Machines','Cellules','Utilisateurs'].map(n=>grist.docApi.fetchTable(n)));
   D.r=rows(r).filter(x=>x.Debut&&x.Fin);D.m=rows(m).filter(x=>x.Actif);D.c=rows(c);
-  D.u=Object.fromEntries(rows(u).map(x=>[x.id,x.nom]));fillF();
+  D.u=Object.fromEntries(rows(u).map(x=>[x.id,x.nom]));D.t=Object.fromEntries(rows(u).map(x=>[x.id,(x.Trigramme||tri(x.nom)).toUpperCase()]));fillF();
   if(document.body.dataset.v==='c')renderCells();render();
 }
 
 function render(){
   const ds=days(),dw=HD*HW,W=ds.length*dw,now=Date.now()/1e3,tot=ds.length*HD,rj=$('rj').checked,today=new Date().toDateString();
-  const g=$('g');g.replaceChildren();g.style.width=(W+200)+'px';g.style.setProperty('--hw',HW+'px');g.style.setProperty('--dw',dw+'px');g.style.setProperty('--am',4*HW+'px');
-  const seps=t=>ds.forEach((d,i)=>{const n=el('div','noon-l');n.style.left=i*dw+4*HW+'px';t.append(n);if(!i)return;const s=el('div','sep'+(d.getDay()===1||ds[i-1].getDay()>d.getDay()?' w':''));s.style.left=i*dw+'px';t.append(s)});
+  const g=$('g');g.replaceChildren();g.style.width=(W+200)+'px';g.style.setProperty('--hw',HW+'px');g.style.setProperty('--dw',dw+'px');g.style.setProperty('--am',5*HW+'px');
+  const seps=t=>ds.forEach((d,i)=>{const n=el('div','noon-l');n.style.left=i*dw+5*HW+'px';t.append(n);if(!i)return;const s=el('div','sep'+(d.getDay()===1||ds[i-1].getDay()>d.getDay()?' w':''));s.style.left=i*dw+'px';t.append(s)});
   const hd=el('div','row hd');hd.append(el('div','lab','Machine'));const th=el('div','trk');th.style.width=W+'px';
   let i0=0;ds.forEach((d,i)=>{const nxt=ds[i+1];if(!nxt||wk(nxt)!==wk(d)){const w=el('div','wkh','Week '+wk(d)+' · '+ds[i0].toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' – '+d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}));w.style.left=i0*dw+'px';w.style.width=(i-i0+1)*dw+'px';th.append(w);i0=i+1}
-    const x=el('div','dayh',d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}));x.style.left=i*dw+'px';x.style.width=dw+'px';if(d.toDateString()===today)x.style.fontWeight=800;th.append(x);for(let h=H0;h<H1;h++){const q=el('div','hr'+(h>=12?' pm':'')+(h===12?' noon':''),String(h));q.style.left=i*dw+(h-H0)*HW+'px';q.style.width=HW+'px';th.append(q)}});
+    const x=el('div','dayh',d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}));x.style.left=i*dw+'px';x.style.width=dw+'px';if(d.toDateString()===today)x.style.fontWeight=800;th.append(x);for(let h=H0;h<H1;h++){const q=el('div','hr'+(h>=13?' pm':'')+(h===13?' noon':''),String(h));q.style.left=i*dw+(h-H0)*HW+'px';q.style.width=HW+'px';th.append(q)}});
   hd.append(th);g.append(hd);
   const ti=ds.findIndex(d=>d.toDateString()===today);
   D.m.filter(m=>!S.m||m.id==S.m).forEach(m=>{
@@ -141,8 +143,8 @@ function render(){
       if(!rej&&e.Type==='reservation')used+=f-s;
       const nm=D.u[e.Utilisateur]||'?',w=(f-s)*HW,isR=e.Type==='reservation';
       const b=el('div','bar '+(e.Type||'').replace(/ /g,'_')+(rej?' rej':'')+(own?'':' ghost'));
-      if(!rej)b.append(el('span','',isR?(w<70?nm.split(' ').map(x=>x[0]).join('').toUpperCase():nm):({maintenance:'Maintenance',demo:'Demo','out of service':'Out of service'}[e.Type]||e.Type)));
-      b.style.left=s*HW+'px';b.style.width=Math.max(4,w)+'px';
+      if(!rej)b.append(el('span','',isR?(w<70?(D.t[e.Utilisateur]||'?'):nm):({maintenance:'Maintenance',demo:'Demo','out of service':'Out of service'}[e.Type]||e.Type)));
+      if(w<40){b.style.fontSize='10px';b.style.padding='1px 2px'}b.style.left=s*HW+'px';b.style.width=Math.max(4,w)+'px';
       if(isR&&!rej){const c=(cellOf(e)||{}).Couleur||m.Couleur||'#64748b';b.style.background=c;b.style.color=lum(c)>.6?'#111':'#fff'}
       b.title=fmt(e.Debut)+' → '+fmt(e.Fin)+(e.Message?'\n'+tr(e.Message):'');
       b.onclick=()=>detail(e);trk.append(b);
@@ -172,7 +174,13 @@ function renderCells(){const c=$('cvc');c.replaceChildren();
   const ul=el('ul');D.c.forEach(x=>{const li=el('li'),s=el('i','sw');s.style.background=x.Couleur||'#999';li.append(s,el('b','',x.nom),document.createTextNode((x.Type?' ('+x.Type+')':'')+': '+L(x.machines).map(mname).join(', ')));ul.append(li)});
   c.append(ul,el('p','','Cell A: half (half of the rail) or full (whole rail, blocks the Kuka). The AGV can go to any cell. Bookings are coloured like their cell.'))}
 function fillF(){const f=(id,a,lab)=>{const s=$(id),v=s.value;s.replaceChildren(new Option(lab,''),...a.map(x=>new Option(x[1],x[0])));s.value=v};f('fm',D.m.map(m=>[m.id,m.nom]),'All machines');f('fu',Object.entries(D.u),'All users')}
-function view(v){document.body.dataset.v=v;$('tb1').className=v==='c'?'':'on';$('tb2').className=v==='c'?'on':'';if(v==='c')renderCells()}
+function renderHelp(){const c=$('hvc');c.replaceChildren();
+  const sec=(h,a)=>{c.append(el('h3','',h));const u=el('ul');a.forEach(x=>u.append(el('li','',x)));c.append(u)};
+  sec('Book a slot',['Click “＋ Book”, choose the machines, the cell you will work in, then the start and end (whole hours, 8:00–19:00, weekdays only).','Fill “Autonox mode” only if you use the rail: full blocks the Kuka, half does not.','Press Send: a window tells you if the booking is confirmed or why it is refused. It stays open until you close it.']);
+  sec('Read the planning',['One row per machine. The coloured tab is the machine colour; the dot shows whether it is free (green) or busy (red) right now.','Bars are coloured like their cell and show the user; narrow bars show a 3-letter code.','Pale bars: machine blocked by another booking in the same cell. Red hatched line: refused request.','Black and yellow: maintenance. Navy outline: demo. Dark red: out of service.','Shaded area: afternoon (from 13:00). Use Today, ◀ ▶, the filters and ⚙ Display (period, refused requests, large text).']);
+  sec('Change or cancel',['Click a bar to see its details. You can delete your own bookings only.']);
+  sec('Good to know',['First come, first served. Maintenance, demo and out-of-service periods always take priority and can cancel overlapping bookings.','The Cells tab shows where each machine is in the room.'])}
+function view(v){document.body.dataset.v=v;['p','c','h'].forEach((k,i)=>$('tb'+(i+1)).className=k===v?'on':'');if(v==='c')renderCells();if(v==='h')renderHelp()}
 function initForm(){
   const f=$('f');
   $('mcs').replaceChildren(...D.m.map(m=>{const l=el('label'),i=document.createElement('input');i.type='checkbox';i.className='mc';i.value=m.id;l.append(i,' '+m.nom);return l}));
@@ -208,6 +216,6 @@ $('fm').onchange=e=>{S.m=e.target.value;render()};$('fu').onchange=e=>{S.u=e.tar
 $('dp').onclick=()=>$('ds').showModal();$('dsx').onclick=()=>$('ds').close();
 $('nw').onclick=()=>{initForm();$('fm2').showModal()};$('fx').onclick=()=>$('fm2').close();
 $('dx').onclick=()=>$('dt').close();$('rx').onclick=()=>$('rs').close();$('sd').onclick=send;
-$('tb1').onclick=()=>view('p');$('tb2').onclick=()=>view('c');
+$('tb1').onclick=()=>view('p');$('tb2').onclick=()=>view('c');$('tb3').onclick=()=>view('h');
 load().catch(e=>{const a=$('al');a.style.display='block';a.textContent='Loading error: '+(e&&e.message||e)});
 </script></body></html>
